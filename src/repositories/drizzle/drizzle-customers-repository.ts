@@ -59,4 +59,8 @@ export class DrizzleCustomersRepository implements CustomersRepository {
 
     return customer!
   }
+
+  async delete(id: string): Promise<void> {
+    await db.delete(customers).where(eq(customers.id, id))
+  }
 }

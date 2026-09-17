@@ -18,4 +18,5 @@ export interface CustomersRepository {
   findMany(params: FindManyCustomersParams): Promise<Customer[]>
   count(): Promise<number>
   update(id: string, data: UpdateCustomerData): Promise<Customer>
+  delete(id: string): Promise<void>
 }
