@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import type { NewOrderItem, OrderItem } from '../../db/schema'
-import type { OrderItemsRepository } from '../order-items-repository'
+import type {
+  OrderItemsRepository,
+  UpdateOrderItemData,
+} from '../order-items-repository'
 
 export class InMemoryOrderItemsRepository implements OrderItemsRepository {
   public items: OrderItem[] = []
@@ -46,5 +49,24 @@ export class InMemoryOrderItemsRepository implements OrderItemsRepository {
 
   async deleteByOrderId(orderId: string): Promise<void> {
     this.items = this.items.filter((item) => item.orderId !== orderId)
+  }
+
+  async update(id: string, data: UpdateOrderItemData): Promise<OrderItem> {
+    const orderItemIndex = this.items.findIndex((item) => item.id === id)
+
+    if (orderItemIndex === -1) {
+      throw new Error('Order item not found')
+    }
+
+    const orderItem = this.items[orderItemIndex]
+
+    const updatedOrderItem: OrderItem = {
+      ...orderItem,
+      ...data,
+    }
+
+    this.items[orderItemIndex] = updatedOrderItem
+
+    return updatedOrderItem
   }
 }

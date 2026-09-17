@@ -1,7 +1,10 @@
 import { eq } from 'drizzle-orm'
 import { db } from '../../db'
 import { orderItems, type NewOrderItem, type OrderItem } from '../../db/schema'
-import type { OrderItemsRepository } from '../order-items-repository'
+import type {
+  OrderItemsRepository,
+  UpdateOrderItemData,
+} from '../order-items-repository'
 
 export class DrizzleOrderItemsRepository implements OrderItemsRepository {
   async create(data: NewOrderItem): Promise<OrderItem | null> {
@@ -36,5 +39,19 @@ export class DrizzleOrderItemsRepository implements OrderItemsRepository {
 
   async deleteByOrderId(orderId: string): Promise<void> {
     await db.delete(orderItems).where(eq(orderItems.orderId, orderId))
+  }
+
+  async update(id: string, data: UpdateOrderItemData): Promise<OrderItem> {
+    const [orderItem] = await db
+      .update(orderItems)
+      .set(data)
+      .where(eq(orderItems.id, id))
+      .returning()
+
+    if (!orderItem) {
+      throw new Error('Order item not found')
+    }
+
+    return orderItem
   }
 }
