@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 import { db } from '../../db'
 import {
   motorcycles,
@@ -16,10 +16,14 @@ export class DrizzleMotorcyclesRepository implements MotorcyclesRepository {
 
     return motorcycle ?? null
   }
-  findMany(): Promise<Motorcycle[]> {
-    throw new Error('Method not implemented.')
+
+  async findMany(): Promise<Motorcycle[]> {
+    return db.select().from(motorcycles).orderBy(desc(motorcycles.createdAt))
   }
-  create(data: NewMotorcycle): Promise<Motorcycle> {
-    throw new Error('Method not implemented.')
+
+  async create(data: NewMotorcycle): Promise<Motorcycle | null> {
+    const [motorcycle] = await db.insert(motorcycles).values(data).returning()
+
+    return motorcycle ?? null
   }
 }

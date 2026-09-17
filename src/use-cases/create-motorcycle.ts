@@ -8,9 +8,12 @@ export class CreateMotorcycleUseCase {
     const motorcycle = await this.motorcyclesRepository.create({
       chassis,
       model,
-      status,
       estimatedArrival,
     })
+
+    if (!motorcycle) {
+      throw new Error('Failed to create motorcycle.')
+    }
 
     return { motorcycle }
   }
