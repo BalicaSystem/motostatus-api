@@ -4,13 +4,16 @@ import type { MotorcyclesRepository } from '../repositories/motorcycles-reposito
 export class CreateMotorcycleUseCase {
   constructor(private motorcyclesRepository: MotorcyclesRepository) {}
 
-  async execute({ model, chassis, estimatedArrival, status }: NewMotorcycle) {
+  async execute({ model, chassis, estimatedArrival }: NewMotorcycle) {
     const motorcycle = await this.motorcyclesRepository.create({
       chassis,
       model,
-      status,
       estimatedArrival,
     })
+
+    if (!motorcycle) {
+      throw new Error('Failed to create motorcycle.')
+    }
 
     return { motorcycle }
   }

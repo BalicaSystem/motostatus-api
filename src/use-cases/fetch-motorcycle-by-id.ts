@@ -10,7 +10,7 @@ interface MotorcycleUseCaseResponse {
   motorcycle: Motorcycle
 }
 
-export class GetMotorcycleUseCase {
+export class FetchMotorcycleByIdUseCase {
   constructor(private motorcyclesRepository: MotorcyclesRepository) {}
 
   async execute({
