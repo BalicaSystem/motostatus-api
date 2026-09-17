@@ -6,6 +6,7 @@ import { apiRoutes } from './http/controllers/index.routes'
 import { ChassisAlreadyExistsError } from './use-cases/errors/chassis-already-exists-error'
 import { ResourceNotFoundError } from './use-cases/errors/resource-not-found-error'
 import { CustomerAlreadyExistsError } from './use-cases/errors/customer-already-exists-error'
+import { MotorcycleUnavailableError } from './use-cases/errors/motorcycle-unavailable-error'
 
 export const app = fastify()
 
@@ -34,6 +35,12 @@ app.setErrorHandler((error, _, reply) => {
   }
 
   if (error instanceof CustomerAlreadyExistsError) {
+    return reply.status(409).send({
+      message: error.message,
+    })
+  }
+
+  if (error instanceof MotorcycleUnavailableError) {
     return reply.status(409).send({
       message: error.message,
     })
