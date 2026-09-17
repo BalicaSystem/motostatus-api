@@ -6,5 +6,6 @@ export default defineConfig({
     include: ['src/http/controllers/**/*.test.ts'],
     globalSetup: ['./src/test/setup/database.ts'],
     setupFiles: ['./src/test/setup/env.ts'],
+    fileParallelism: false,
   },
 })
