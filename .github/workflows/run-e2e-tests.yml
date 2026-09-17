@@ -10,13 +10,13 @@ jobs:
 
     services:
       postgres:
-        image: bitnami/postgresql:17
+        image: postgres:17
         ports:
           - 5432:5432
         env:
-          POSTGRESQL_USERNAME: docker
-          POSTGRESQL_PASSWORD: docker
-          POSTGRESQL_DATABASE: motostatus
+          POSTGRES_USER: docker
+          POSTGRES_PASSWORD: docker
+          POSTGRES_DB: motostatus
         options: >-
           --health-cmd "pg_isready -U docker -d motostatus"
           --health-interval 10s
