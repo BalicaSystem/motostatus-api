@@ -6,8 +6,10 @@
   "scripts": {
     "start:dev": "bun --watch src/server.ts",
     "start": "bun build/server.js",
-    "test": "vitest run --dir src/use-cases",
-    "test:watch": "vitest --dir src/use-cases"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
