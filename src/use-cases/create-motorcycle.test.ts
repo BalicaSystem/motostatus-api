@@ -16,7 +16,6 @@ describe('Create Motorcycle Use Case', () => {
       chassis: '9C2JB0100VR207174',
       model: 'POP 110I ES',
       estimatedArrival: '01/08/2026',
-      status: 'in_transit',
     })
 
     expect(motorcycle.id).toEqual(expect.any(String))
