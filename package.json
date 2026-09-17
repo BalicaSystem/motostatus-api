@@ -6,8 +6,8 @@
   "scripts": {
     "start:dev": "bun --watch src/server.ts",
     "start": "bun build/server.js",
-    "test": "vitest run",
-    "test:watch": "vitest --watch run",
+    "test": "vitest run --config vite.config.ts",
+    "test:unit": "vitest run --config vite.config.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "devDependencies": {
