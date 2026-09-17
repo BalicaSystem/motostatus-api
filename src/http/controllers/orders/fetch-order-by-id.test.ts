@@ -4,6 +4,7 @@ import { app } from '../../../app'
 import { db } from '../../../db'
 import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
 import { createCustomer } from '../../../utils/test/create-customer'
+import { createMotorcycle } from '../../../utils/test/create-motorcycle'
 
 describe('Fetch Order By ID (e2e)', () => {
   beforeEach(async () => {
@@ -17,6 +18,7 @@ describe('Fetch Order By ID (e2e)', () => {
 
   it('should be able to fetch an order by id', async () => {
     const { customer } = await createCustomer()
+    const { motorcycle } = await createMotorcycle()
 
     const [order] = await db
       .insert(orders)
@@ -24,6 +26,14 @@ describe('Fetch Order By ID (e2e)', () => {
         customerId: customer?.id,
         seller: 'Carlos',
         billingDate: '2026-09-17',
+      })
+      .returning()
+
+    const [orderItem] = await db
+      .insert(orderItems)
+      .values({
+        orderId: order?.id,
+        motorcycleId: motorcycle?.id,
       })
       .returning()
 
@@ -38,6 +48,40 @@ describe('Fetch Order By ID (e2e)', () => {
         seller: 'Carlos',
         billingDate: '2026-09-17',
       }),
+      orderItems: [
+        expect.objectContaining({
+          id: orderItem?.id,
+          orderId: order?.id,
+          motorcycleId: motorcycle?.id,
+          registrationStatus: 'without_registration',
+          registrationDate: null,
+        }),
+      ],
+    })
+  })
+
+  it('should be able to fetch an order without order items', async () => {
+    const { customer } = await createCustomer()
+
+    const [order] = await db
+      .insert(orders)
+      .values({
+        customerId: customer?.id,
+        seller: 'Carlos',
+      })
+      .returning()
+
+    const response = await request(app.server)
+      .get(`/api/orders/${order?.id}`)
+      .expect(200)
+
+    expect(response.body).toEqual({
+      order: expect.objectContaining({
+        id: order?.id,
+        customerId: customer?.id,
+        seller: 'Carlos',
+      }),
+      orderItems: [],
     })
   })
 

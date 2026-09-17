@@ -14,11 +14,12 @@ export async function fetchOrderById(
 
   const fetchOrderById = makeFetchOrderByIdUseCase()
 
-  const { order } = await fetchOrderById.execute({
+  const { order, orderItems } = await fetchOrderById.execute({
     id,
   })
 
   return reply.status(200).send({
     order,
+    orderItems,
   })
 }
