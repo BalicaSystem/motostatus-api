@@ -5,10 +5,18 @@ export interface FindManyMotorcyclesParams {
   offset: number
 }
 
+export interface UpdateMotorcycleData {
+  model?: string
+  estimatedArrival?: string | null
+  status?: Motorcycle['status']
+  chassis?: string
+}
+
 export interface MotorcyclesRepository {
   create(data: NewMotorcycle): Promise<Motorcycle | null>
   findById(id: string): Promise<Motorcycle | null>
   findMany(params: FindManyMotorcyclesParams): Promise<Motorcycle[]>
   count(): Promise<number>
-  updateStatus(id: string, status: Motorcycle['status']): Promise<Motorcycle>
+  findByChassis(chassis: string): Promise<Motorcycle | null>
+  update(id: string, data: UpdateMotorcycleData): Promise<Motorcycle>
 }

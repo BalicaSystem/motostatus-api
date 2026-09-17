@@ -1,4 +1,4 @@
-import { eq, desc, count } from 'drizzle-orm'
+import { count, desc, eq } from 'drizzle-orm'
 import { db } from '../../db'
 import {
   motorcycles,
@@ -11,15 +11,20 @@ import type {
 } from '../motorcycles-repository'
 
 export class DrizzleMotorcyclesRepository implements MotorcyclesRepository {
-  updateStatus(id: string, status: Motorcycle['status']): Promise<Motorcycle> {
-    throw new Error('Method not implemented.')
-  }
-
   async findById(id: string): Promise<Motorcycle | null> {
     const [motorcycle] = await db
       .select()
       .from(motorcycles)
       .where(eq(motorcycles.id, id))
+
+    return motorcycle ?? null
+  }
+
+  async findByChassis(chassis: string): Promise<Motorcycle | null> {
+    const [motorcycle] = await db
+      .select()
+      .from(motorcycles)
+      .where(eq(motorcycles.chassis, chassis))
 
     return motorcycle ?? null
   }
@@ -43,5 +48,23 @@ export class DrizzleMotorcyclesRepository implements MotorcyclesRepository {
     const [motorcycle] = await db.insert(motorcycles).values(data).returning()
 
     return motorcycle ?? null
+  }
+
+  async update(
+    id: string,
+    data: Partial<
+      Pick<Motorcycle, 'model' | 'chassis' | 'estimatedArrival' | 'status'>
+    >,
+  ): Promise<Motorcycle> {
+    const [motorcycle] = await db
+      .update(motorcycles)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(motorcycles.id, id))
+      .returning()
+
+    return motorcycle!
   }
 }
