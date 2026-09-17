@@ -5,6 +5,5 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     exclude: ['src/http/controllers/**/*.test.ts'],
-    globalSetup: ['./src/test/setup/database.ts'],
   },
 })
