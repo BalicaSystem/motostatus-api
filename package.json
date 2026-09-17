@@ -1,0 +1,19 @@
+{
+  "name": "motostatus-api",
+  "module": "src/server.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start:dev": "bun --watch src/server.ts",
+    "start": "bun build/server.js"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  },
+  "dependencies": {
+    "fastify": "^5.12.5"
+  }
+}
