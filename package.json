@@ -5,15 +5,23 @@
   "private": true,
   "scripts": {
     "start:dev": "bun --watch src/server.ts",
-    "start": "bun build/server.js"
+    "start": "bun build/server.js",
+    "test": "vitest run --dir src/use-cases",
+    "test:watch": "vitest --dir src/use-cases"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@vitest/coverage-v8": "5.0.1",
+    "vitest": "5.0.1"
   },
   "peerDependencies": {
     "typescript": "^7"
   },
   "dependencies": {
-    "fastify": "^5.12.5"
+    "@types/supertest": "^7.2.1",
+    "dotenv": "17.4.2",
+    "fastify": "^5.12.5",
+    "supertest": "^7.2.2",
+    "zod": "4.6.5"
   }
 }
