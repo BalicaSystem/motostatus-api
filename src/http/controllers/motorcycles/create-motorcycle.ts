@@ -17,18 +17,22 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
   try {
     const createMotorcycleUseCase = makeCreateMotorcycleUseCase()
 
-    await createMotorcycleUseCase.execute({
+    const motorcycle = await createMotorcycleUseCase.execute({
       model,
       chassis,
       estimatedArrival,
     })
+
+    return reply.status(201).send({
+      motorcycle,
+    })
   } catch (err) {
     if (err instanceof MotorcycleAlreadyExistsError) {
-      return reply.status(409).send({ message: err.message })
+      return reply.status(409).send({
+        message: err.message,
+      })
     }
 
     throw err
   }
-
-  reply.status(201).send()
 }
