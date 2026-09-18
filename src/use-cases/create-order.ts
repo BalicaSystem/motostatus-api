@@ -2,7 +2,7 @@ import type { Order, OrderItem } from '../db/schema'
 import type { CustomersRepository } from '../repositories/customers-repository'
 import type { MotorcyclesRepository } from '../repositories/motorcycles-repository'
 import type { OrderItemsRepository } from '../repositories/order-items-repository'
-import type { OrdersRepository } from '../repositories/orders-repository'
+import type { OrdersUnitOfWork } from '../repositories/orders-unit-of-work'
 import { MotorcycleUnavailableError } from './errors/motorcycle-unavailable-error'
 import { ResourceNotFoundError } from './errors/resource-not-found-error'
 
@@ -20,10 +20,10 @@ interface CreateOrderUseCaseResponse {
 
 export class CreateOrderUseCase {
   constructor(
-    private ordersRepository: OrdersRepository,
-    private orderItemsRepository: OrderItemsRepository,
+    private ordersUnitOfWork: OrdersUnitOfWork,
     private customersRepository: CustomersRepository,
     private motorcyclesRepository: MotorcyclesRepository,
+    private orderItemsRepository: OrderItemsRepository,
   ) {}
 
   async execute({
@@ -67,34 +67,20 @@ export class CreateOrderUseCase {
       }
     }
 
-    const order = await this.ordersRepository.create({
-      customerId,
-      seller,
-      billingDate: billingDate ?? null,
-    })
-
-    if (!order) {
-      throw new Error('Order could not be created')
-    }
-
-    const orderItems: OrderItem[] = []
-
-    for (const motorcycleId of motorcycleIds) {
-      const orderItem = await this.orderItemsRepository.create({
-        orderId: order.id,
+    const result = await this.ordersUnitOfWork.createOrderWithItems(
+      {
+        customerId,
+        seller,
+        billingDate: billingDate ?? null,
+      },
+      motorcycleIds.map((motorcycleId) => ({
         motorcycleId,
-      })
+        status: 'active',
+        registrationStatus: 'without_registration',
+        registrationDate: null,
+      })),
+    )
 
-      if (!orderItem) {
-        throw new Error('Order item could not be created')
-      }
-
-      orderItems.push(orderItem)
-    }
-
-    return {
-      order,
-      orderItems,
-    }
+    return result
   }
 }

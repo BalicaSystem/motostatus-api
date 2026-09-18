@@ -2,7 +2,7 @@ import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers } from '../../../db/schema'
+import { customers, orderItems, orders } from '../../../db/schema'
 
 describe('Fetch Customers (e2e)', () => {
   beforeAll(async () => {
@@ -14,6 +14,8 @@ describe('Fetch Customers (e2e)', () => {
   })
 
   beforeEach(async () => {
+    await db.delete(orderItems)
+    await db.delete(orders)
     await db.delete(customers)
   })
 

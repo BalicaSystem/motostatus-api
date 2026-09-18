@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { InMemoryCustomersRepository } from '../repositories/in-memory/in-memory-customers-repository'
 import { InMemoryMotorcycleRepository } from '../repositories/in-memory/in-memory-motorcycle-repository'
 import { InMemoryOrderItemsRepository } from '../repositories/in-memory/in-memory-order-items-repository'
-import { InMemoryOrdersRepository } from '../repositories/in-memory/in-memory-orders-repository'
+import { InMemoryOrdersUnitOfWork } from '../repositories/in-memory/in-memory-orders-unit-of-work'
 import { MotorcycleUnavailableError } from './errors/motorcycle-unavailable-error'
 import { ResourceNotFoundError } from './errors/resource-not-found-error'
 import { CreateOrderUseCase } from './create-order'
@@ -10,7 +10,7 @@ import { CreateOrderUseCase } from './create-order'
 let customersRepository: InMemoryCustomersRepository
 let motorcyclesRepository: InMemoryMotorcycleRepository
 let orderItemsRepository: InMemoryOrderItemsRepository
-let ordersRepository: InMemoryOrdersRepository
+let ordersUnitOfWork: InMemoryOrdersUnitOfWork
 let sut: CreateOrderUseCase
 
 describe('Create Order Use Case', () => {
@@ -18,13 +18,13 @@ describe('Create Order Use Case', () => {
     customersRepository = new InMemoryCustomersRepository()
     motorcyclesRepository = new InMemoryMotorcycleRepository()
     orderItemsRepository = new InMemoryOrderItemsRepository()
-    ordersRepository = new InMemoryOrdersRepository()
+    ordersUnitOfWork = new InMemoryOrdersUnitOfWork()
 
     sut = new CreateOrderUseCase(
-      ordersRepository,
-      orderItemsRepository,
+      ordersUnitOfWork,
       customersRepository,
       motorcyclesRepository,
+      orderItemsRepository,
     )
   })
 
