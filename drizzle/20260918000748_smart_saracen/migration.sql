@@ -1,0 +1,2 @@
+CREATE TYPE "order_item_status" AS ENUM('active', 'released', 'completed');--> statement-breakpoint
+ALTER TABLE "order_items" ADD COLUMN "status" "order_item_status" DEFAULT 'active'::"order_item_status" NOT NULL;

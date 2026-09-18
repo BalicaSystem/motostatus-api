@@ -7,6 +7,8 @@ import { ChassisAlreadyExistsError } from './use-cases/errors/chassis-already-ex
 import { ResourceNotFoundError } from './use-cases/errors/resource-not-found-error'
 import { CustomerAlreadyExistsError } from './use-cases/errors/customer-already-exists-error'
 import { MotorcycleUnavailableError } from './use-cases/errors/motorcycle-unavailable-error'
+import { OrderItemCannotBeReleasedError } from './use-cases/errors/order-item-cannot-be-released-error'
+import { OrderItemCannotBeCompletedError } from './use-cases/complete-order-item'
 
 export const app = fastify()
 
@@ -41,6 +43,18 @@ app.setErrorHandler((error, _, reply) => {
   }
 
   if (error instanceof MotorcycleUnavailableError) {
+    return reply.status(409).send({
+      message: error.message,
+    })
+  }
+
+  if (error instanceof OrderItemCannotBeReleasedError) {
+    return reply.status(409).send({
+      message: error.message,
+    })
+  }
+
+  if (error instanceof OrderItemCannotBeCompletedError) {
     return reply.status(409).send({
       message: error.message,
     })

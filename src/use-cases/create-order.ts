@@ -57,6 +57,14 @@ export class CreateOrderUseCase {
     for (const motorcycleId of motorcycleIds) {
       const orderItems =
         await this.orderItemsRepository.findByMotorcycleId(motorcycleId)
+
+      const hasActiveOrderItem = orderItems.some(
+        (orderItem) => orderItem.status === 'active',
+      )
+
+      if (hasActiveOrderItem) {
+        throw new MotorcycleUnavailableError()
+      }
     }
 
     const order = await this.ordersRepository.create({
@@ -69,7 +77,7 @@ export class CreateOrderUseCase {
       throw new Error('Order could not be created')
     }
 
-    const orderItems = []
+    const orderItems: OrderItem[] = []
 
     for (const motorcycleId of motorcycleIds) {
       const orderItem = await this.orderItemsRepository.create({

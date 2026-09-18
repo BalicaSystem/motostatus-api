@@ -1,6 +1,7 @@
 import type { NewOrderItem, OrderItem } from '../db/schema'
 
 export interface UpdateOrderItemData {
+  status?: OrderItem['status']
   registrationStatus?: OrderItem['registrationStatus']
   registrationDate?: string | null
 }

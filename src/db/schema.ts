@@ -20,6 +20,12 @@ export const registrationStatusEnum = pgEnum('registration_status', [
   'registered',
 ])
 
+export const orderItemStatusEnum = pgEnum('order_item_status', [
+  'active',
+  'released',
+  'completed',
+])
+
 export const motorcycles = pgTable('motorcycles', {
   id: uuid('id').defaultRandom().primaryKey(),
   model: text('model').notNull(),
@@ -84,6 +90,7 @@ export const orderItems = pgTable('order_items', {
   motorcycleId: uuid('motorcycle_id')
     .notNull()
     .references(() => motorcycles.id),
+  status: orderItemStatusEnum('status').notNull().default('active'),
   registrationStatus: registrationStatusEnum('registration_status')
     .notNull()
     .default('without_registration'),
