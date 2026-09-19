@@ -1,4 +1,4 @@
-import { count, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq, lt } from 'drizzle-orm'
 import { db } from '../../db'
 import {
   motorcycles,
@@ -36,6 +36,18 @@ export class DrizzleMotorcyclesRepository implements MotorcyclesRepository {
       .orderBy(desc(motorcycles.createdAt))
       .limit(limit)
       .offset(offset)
+  }
+
+  async findOverdueInTransit(upTo: string): Promise<Motorcycle[]> {
+    return db
+      .select()
+      .from(motorcycles)
+      .where(
+        and(
+          eq(motorcycles.status, 'in_transit'),
+          lt(motorcycles.estimatedArrival, upTo),
+        ),
+      )
   }
 
   async count() {
