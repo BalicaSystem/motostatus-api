@@ -4,6 +4,7 @@ import cors from '@fastify/cors'
 
 import { env } from './env'
 import { apiRoutes } from './http/controllers/index.routes'
+import { health } from './http/controllers/health'
 import { ChassisAlreadyExistsError } from './use-cases/errors/chassis-already-exists-error'
 import { ResourceNotFoundError } from './use-cases/errors/resource-not-found-error'
 import { CustomerAlreadyExistsError } from './use-cases/errors/customer-already-exists-error'
@@ -18,6 +19,8 @@ await app.register(cors, {
   origin: ['http://localhost:3000', 'https://www.motostatus.com.br'],
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
 })
+
+app.get('/health', health)
 
 app.register(apiRoutes, {
   prefix: '/api',
