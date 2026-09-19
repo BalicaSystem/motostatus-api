@@ -7,5 +7,7 @@ export default defineConfig({
     globalSetup: ['./src/test/setup/database.ts'],
     setupFiles: ['./src/test/setup/env.ts'],
     fileParallelism: false,
+    maxWorkers: 1,
+    minWorkers: 1,
   },
 })
