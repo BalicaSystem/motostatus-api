@@ -15,7 +15,7 @@ import { OrderItemCannotBeCompletedError } from './use-cases/complete-order-item
 export const app = fastify()
 
 await app.register(cors, {
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'https://www.motostatus.com.br'],
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
 })
 

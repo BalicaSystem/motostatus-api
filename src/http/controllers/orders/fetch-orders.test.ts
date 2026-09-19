@@ -28,9 +28,14 @@ describe('Fetch Orders (e2e)', () => {
     expect(response.body.orders).toHaveLength(1)
     expect(response.body.orders[0]).toEqual(
       expect.objectContaining({
-        customerId: customer?.id,
+        customer: {
+          id: customer?.id,
+          name: customer?.name,
+          document: customer?.document,
+        },
         seller: 'Carlos',
         billingDate: null,
+        motorcycles: [],
       }),
     )
 
