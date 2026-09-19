@@ -1,15 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-  customers,
-  motorcycles,
-  orderItems,
-  orders,
-  type Order,
-} from '../db/schema'
+import { type Order } from '../db/schema'
 import { InMemoryOrdersRepository } from '../repositories/in-memory/in-memory-orders-repository'
 import { ResourceNotFoundError } from './errors/resource-not-found-error'
 import { UpdateOrderUseCase } from './update-order'
-import { db } from '../db'
 
 describe('Update Order Use Case', () => {
   let ordersRepository: InMemoryOrdersRepository
@@ -17,11 +10,6 @@ describe('Update Order Use Case', () => {
   let order: Order
 
   beforeEach(async () => {
-    await db.delete(orderItems)
-    await db.delete(orders)
-    await db.delete(customers)
-    await db.delete(motorcycles)
-
     ordersRepository = new InMemoryOrdersRepository()
     sut = new UpdateOrderUseCase(ordersRepository)
 

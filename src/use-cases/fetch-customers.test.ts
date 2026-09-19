@@ -1,19 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { InMemoryCustomersRepository } from '../repositories/in-memory/in-memory-customers-repository'
 import { FetchCustomersUseCase } from './fetch-customers'
-import { db } from '../db'
-import { customers, motorcycles, orderItems, orders } from '../db/schema'
 
 let customersRepository: InMemoryCustomersRepository
 let sut: FetchCustomersUseCase
 
 describe('Fetch Customers Use Case', () => {
-  beforeEach(async () => {
-    await db.delete(orderItems)
-    await db.delete(orders)
-    await db.delete(customers)
-    await db.delete(motorcycles)
-
+  beforeEach(() => {
     customersRepository = new InMemoryCustomersRepository()
     sut = new FetchCustomersUseCase(customersRepository)
   })

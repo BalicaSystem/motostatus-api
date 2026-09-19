@@ -2,14 +2,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { InMemoryMotorcycleRepository } from '../repositories/in-memory/in-memory-motorcycle-repository'
 import { FetchMotorcyclesUseCase } from './fetch-motorcycles'
 import { makeMotorcycle } from './factories/make-motorcycles'
-import { db } from '../db'
-import { motorcycles, orderItems } from '../db/schema'
 
 describe('Fetch Motorcycles Use Case', () => {
-  beforeEach(async () => {
-    await db.delete(orderItems)
-    await db.delete(motorcycles)
-  })
 
   it('should be able to fetch motorcycles', async () => {
     const motorcyclesRepository = new InMemoryMotorcycleRepository()
