@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "start:dev": "bun --watch src/server.ts",
+    "build": "bun build src/server.ts --outdir build --target bun",
     "start": "bun build/server.js",
     "test": "vitest run --config vite.config.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
