@@ -29,6 +29,15 @@ export class InMemoryMotorcycleRepository implements MotorcyclesRepository {
     return this.items
   }
 
+  async findOverdueInTransit(upTo: string): Promise<Motorcycle[]> {
+    return this.items.filter(
+      (item) =>
+        item.status === 'in_transit' &&
+        item.estimatedArrival !== null &&
+        item.estimatedArrival < upTo,
+    )
+  }
+
   async count(): Promise<number> {
     return this.items.length
   }

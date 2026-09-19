@@ -1,7 +1,12 @@
 import { app } from './app'
 import { env } from './env'
+import { registerKeepAliveJob } from './jobs/keep-alive'
+import { registerMarkDelayedMotorcyclesJob } from './jobs/mark-delayed-motorcycles'
 
 const start = async () => {
+  registerMarkDelayedMotorcyclesJob()
+  registerKeepAliveJob()
+
   await app.listen({
     host: '0.0.0.0',
     port: env.PORT,

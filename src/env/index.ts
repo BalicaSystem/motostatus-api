@@ -5,6 +5,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['dev', 'test', 'production']).default('dev'),
   DATABASE_URL: z.url(),
   PORT: z.coerce.number().default(3333),
+  RENDER_EXTERNAL_URL: z.url().optional(),
 })
 
 const _env = envSchema.safeParse(process.env)
