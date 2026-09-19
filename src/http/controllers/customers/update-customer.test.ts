@@ -3,20 +3,21 @@ import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers } from '../../../db/schema'
+import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
 import { createCustomer } from '../../../utils/test/create-customer'
 
 describe('Update Customer (e2e)', () => {
-  beforeAll(async () => {
-    await app.ready()
-  })
-
   afterAll(async () => {
     await app.close()
   })
 
   beforeEach(async () => {
+    await app.ready()
+
+    await db.delete(orderItems)
+    await db.delete(orders)
     await db.delete(customers)
+    await db.delete(motorcycles)
   })
 
   it('should be able to update a customer', async () => {

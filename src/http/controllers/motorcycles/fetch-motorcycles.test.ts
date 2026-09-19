@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { createMotorcycle } from '../../../utils/test/create-motorcycle'
 import { db } from '../../../db'
-import { motorcycles } from '../../../db/schema'
+import { motorcycles, orderItems, orders } from '../../../db/schema'
 
 describe('Fetch Motorcycles (e2e)', () => {
   beforeAll(async () => {
@@ -11,6 +11,8 @@ describe('Fetch Motorcycles (e2e)', () => {
   })
 
   beforeEach(async () => {
+    await db.delete(orderItems)
+    await db.delete(orders)
     await db.delete(motorcycles)
   })
 

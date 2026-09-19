@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { InMemoryMotorcycleRepository } from '../repositories/in-memory/in-memory-motorcycle-repository'
 import { FetchMotorcyclesUseCase } from './fetch-motorcycles'
 import { makeMotorcycle } from './factories/make-motorcycles'
 
 describe('Fetch Motorcycles Use Case', () => {
+
   it('should be able to fetch motorcycles', async () => {
     const motorcyclesRepository = new InMemoryMotorcycleRepository()
     const fetchMotorcycles = new FetchMotorcyclesUseCase(motorcyclesRepository)

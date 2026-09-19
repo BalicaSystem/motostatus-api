@@ -3,7 +3,7 @@ import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers } from '../../../db/schema'
+import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
 import { createCustomer } from '../../../utils/test/create-customer'
 import { eq } from 'drizzle-orm'
 
@@ -17,7 +17,10 @@ describe('Delete Customer (e2e)', () => {
   })
 
   beforeEach(async () => {
+    await db.delete(orderItems)
+    await db.delete(orders)
     await db.delete(customers)
+    await db.delete(motorcycles)
   })
 
   it('should be able to delete a customer', async () => {
