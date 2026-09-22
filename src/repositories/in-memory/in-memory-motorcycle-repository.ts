@@ -77,4 +77,14 @@ export class InMemoryMotorcycleRepository implements MotorcyclesRepository {
 
     return motorcycle
   }
+
+  async delete(id: string): Promise<void> {
+    const motorcycleIndex = this.items.findIndex((item) => item.id === id)
+
+    if (motorcycleIndex === -1) {
+      throw new Error('Motorcycle not found')
+    }
+
+    this.items.splice(motorcycleIndex, 1)
+  }
 }

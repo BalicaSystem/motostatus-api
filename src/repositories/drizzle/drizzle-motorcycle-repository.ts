@@ -79,4 +79,8 @@ export class DrizzleMotorcyclesRepository implements MotorcyclesRepository {
 
     return motorcycle!
   }
+
+  async delete(id: string): Promise<void> {
+    await db.delete(motorcycles).where(eq(motorcycles.id, id))
+  }
 }

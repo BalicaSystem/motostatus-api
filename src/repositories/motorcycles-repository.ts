@@ -20,4 +20,5 @@ export interface MotorcyclesRepository {
   count(): Promise<number>
   findByChassis(chassis: string): Promise<Motorcycle | null>
   update(id: string, data: UpdateMotorcycleData): Promise<Motorcycle>
+  delete(id: string): Promise<void>
 }

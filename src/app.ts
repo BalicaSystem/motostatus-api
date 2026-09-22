@@ -10,6 +10,7 @@ import { ResourceNotFoundError } from './use-cases/errors/resource-not-found-err
 import { CustomerAlreadyExistsError } from './use-cases/errors/customer-already-exists-error'
 import { MotorcycleUnavailableError } from './use-cases/errors/motorcycle-unavailable-error'
 import { MotorcycleCannotBeCheckedInError } from './use-cases/errors/motorcycle-cannot-be-checked-in-error'
+import { MotorcycleHasOrderItemsError } from './use-cases/errors/motorcycle-has-order-items-error'
 import { OrderItemCannotBeReleasedError } from './use-cases/errors/order-item-cannot-be-released-error'
 import { OrderItemCannotBeCompletedError } from './use-cases/complete-order-item'
 
@@ -59,6 +60,12 @@ app.setErrorHandler((error, _, reply) => {
   }
 
   if (error instanceof MotorcycleCannotBeCheckedInError) {
+    return reply.status(409).send({
+      message: error.message,
+    })
+  }
+
+  if (error instanceof MotorcycleHasOrderItemsError) {
     return reply.status(409).send({
       message: error.message,
     })
