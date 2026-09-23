@@ -1,11 +1,30 @@
-import { count, desc, eq } from 'drizzle-orm'
+import { count, desc, eq, ilike, or, sql } from 'drizzle-orm'
 import { db } from '../../db'
 import { customers, type Customer, type NewCustomer } from '../../db/schema'
 import type {
+  CustomerSearchParams,
   CustomersRepository,
   FindManyCustomersParams,
   UpdateCustomerData,
 } from '../customers-repository'
+
+function customerSearchWhere(search: string) {
+  const digits = search.replace(/\D/g, '')
+
+  const conditions = [
+    ilike(customers.name, `%${search}%`),
+    ilike(customers.city, `%${search}%`),
+    ilike(customers.document, `%${search}%`),
+  ]
+
+  if (digits) {
+    conditions.push(
+      sql`regexp_replace(${customers.document}, '[^0-9]', '', 'g') ILIKE ${`%${digits}%`}`,
+    )
+  }
+
+  return or(...conditions)
+}
 
 export class DrizzleCustomersRepository implements CustomersRepository {
   async findById(id: string): Promise<Customer | null> {
@@ -26,17 +45,21 @@ export class DrizzleCustomersRepository implements CustomersRepository {
     return customer ?? null
   }
 
-  async findMany({ limit, offset }: FindManyCustomersParams) {
+  async findMany({ limit, offset, search }: FindManyCustomersParams) {
     return db
       .select()
       .from(customers)
+      .where(search ? customerSearchWhere(search) : undefined)
       .orderBy(desc(customers.createdAt))
       .limit(limit)
       .offset(offset)
   }
 
-  async count() {
-    const [result] = await db.select({ count: count() }).from(customers)
+  async count({ search }: CustomerSearchParams = {}) {
+    const [result] = await db
+      .select({ count: count() })
+      .from(customers)
+      .where(search ? customerSearchWhere(search) : undefined)
 
     return result?.count ?? 0
   }

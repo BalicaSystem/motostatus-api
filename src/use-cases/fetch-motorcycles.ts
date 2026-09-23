@@ -4,6 +4,8 @@ import type { MotorcyclesRepository } from '../repositories/motorcycles-reposito
 interface FetchMotorcyclesUseCaseRequest {
   page?: number
   perPage?: number
+  search?: string
+  status?: Motorcycle['status']
 }
 
 interface FetchMotorcyclesUseCaseResponse {
@@ -20,6 +22,8 @@ export class FetchMotorcyclesUseCase {
   async execute({
     page = 1,
     perPage = 20,
+    search,
+    status,
   }: FetchMotorcyclesUseCaseRequest): Promise<FetchMotorcyclesUseCaseResponse> {
     const offset = (page - 1) * perPage
 
@@ -27,8 +31,10 @@ export class FetchMotorcyclesUseCase {
       this.motorcyclesRepository.findMany({
         limit: perPage,
         offset,
+        search,
+        status,
       }),
-      this.motorcyclesRepository.count(),
+      this.motorcyclesRepository.count({ search, status }),
     ])
 
     return {

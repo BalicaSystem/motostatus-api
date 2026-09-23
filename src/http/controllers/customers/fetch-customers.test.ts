@@ -115,4 +115,69 @@ describe('Fetch Customers (e2e)', () => {
 
     expect(response.statusCode).toBe(400)
   })
+
+  it('should be able to search customers by name', async () => {
+    await db.insert(customers).values([
+      {
+        name: 'João Silva',
+        document: '12345678900',
+        city: 'Sobral',
+      },
+      {
+        name: 'Maria Souza',
+        document: '98765432100',
+        city: 'Fortaleza',
+      },
+    ])
+
+    const response = await request(app.server).get('/api/customers?q=silva')
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body.customers).toHaveLength(1)
+    expect(response.body.customers[0]).toEqual(
+      expect.objectContaining({ name: 'João Silva' }),
+    )
+    expect(response.body.total).toBe(1)
+    expect(response.body.totalPages).toBe(1)
+  })
+
+  it('should be able to search customers by document digits', async () => {
+    await db.insert(customers).values([
+      {
+        name: 'João Silva',
+        document: '123.456.789-00',
+        city: 'Sobral',
+      },
+      {
+        name: 'Maria Souza',
+        document: '987.654.321-00',
+        city: 'Fortaleza',
+      },
+    ])
+
+    const response = await request(app.server).get('/api/customers?q=987654321')
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body.customers).toHaveLength(1)
+    expect(response.body.customers[0]).toEqual(
+      expect.objectContaining({ name: 'Maria Souza' }),
+    )
+    expect(response.body.total).toBe(1)
+  })
+
+  it('should return an empty list when search matches nothing', async () => {
+    await db.insert(customers).values([
+      {
+        name: 'João Silva',
+        document: '12345678900',
+        city: 'Sobral',
+      },
+    ])
+
+    const response = await request(app.server).get('/api/customers?q=Aquiraz')
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body.customers).toHaveLength(0)
+    expect(response.body.total).toBe(0)
+  })
 })

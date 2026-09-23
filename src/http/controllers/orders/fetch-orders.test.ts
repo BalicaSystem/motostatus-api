@@ -169,4 +169,73 @@ describe('Fetch Orders (e2e)', () => {
 
     expect(response.body.message).toEqual('Validation error.')
   })
+
+  it('should be able to search orders by customer name', async () => {
+    const [customerA] = await db
+      .insert(customers)
+      .values({
+        name: 'Carlos Alberto',
+        document: '12345678900',
+        city: 'Fortaleza',
+      })
+      .returning()
+
+    const [customerB] = await db
+      .insert(customers)
+      .values({
+        name: 'Maria Souza',
+        document: '98765432100',
+        city: 'Sobral',
+      })
+      .returning()
+
+    await db.insert(orders).values([
+      {
+        customerId: customerA.id,
+        seller: 'Ana Lima',
+      },
+      {
+        customerId: customerB.id,
+        seller: 'Bruno Costa',
+      },
+    ])
+
+    const response = await request(app.server)
+      .get('/api/orders?q=souza')
+      .expect(200)
+
+    expect(response.body.orders).toHaveLength(1)
+    expect(response.body.orders[0].customer.name).toBe('Maria Souza')
+    expect(response.body.meta.total).toBe(1)
+  })
+
+  it('should be able to search orders by seller', async () => {
+    const [customer] = await db
+      .insert(customers)
+      .values({
+        name: 'João Silva',
+        document: '12345678900',
+        city: 'Sobral',
+      })
+      .returning()
+
+    await db.insert(orders).values([
+      {
+        customerId: customer.id,
+        seller: 'Ana Lima',
+      },
+      {
+        customerId: customer.id,
+        seller: 'Bruno Costa',
+      },
+    ])
+
+    const response = await request(app.server)
+      .get('/api/orders?q=ana')
+      .expect(200)
+
+    expect(response.body.orders).toHaveLength(1)
+    expect(response.body.orders[0].seller).toBe('Ana Lima')
+    expect(response.body.meta.total).toBe(1)
+  })
 })

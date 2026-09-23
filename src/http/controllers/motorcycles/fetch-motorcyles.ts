@@ -1,25 +1,29 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { z } from 'zod'
 import { makeFetchMotorcyclesUseCase } from '../../../use-cases/factories/make-fetch-motorcycles-use-case'
 
-interface FetchMotorcyclesRequest {
-  page?: string
-  perPage?: string
-}
+const fetchMotorcyclesQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  perPage: z.coerce.number().int().positive().default(20),
+  q: z.string().trim().optional(),
+  status: z.enum(['in_transit', 'delayed', 'arrived']).optional(),
+})
 
 export async function fetchMotorcycles(
-  request: FastifyRequest<{
-    Querystring: FetchMotorcyclesRequest
-  }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) {
-  const fetchMotorcycles = makeFetchMotorcyclesUseCase()
+  const { page, perPage, q, status } = fetchMotorcyclesQuerySchema.parse(
+    request.query,
+  )
 
-  const page = Number(request.query.page ?? 1)
-  const perPage = Number(request.query.perPage ?? 20)
+  const fetchMotorcycles = makeFetchMotorcyclesUseCase()
 
   const result = await fetchMotorcycles.execute({
     page,
     perPage,
+    search: q,
+    status,
   })
 
   return reply.status(200).send(result)

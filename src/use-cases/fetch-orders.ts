@@ -7,6 +7,7 @@ import type { OrdersRepository } from '../repositories/orders-repository'
 interface FetchOrdersUseCaseRequest {
   page: number
   perPage: number
+  search?: string
 }
 
 interface OrderWithDetails {
@@ -47,6 +48,7 @@ export class FetchOrdersUseCase {
   async execute({
     page,
     perPage,
+    search,
   }: FetchOrdersUseCaseRequest): Promise<FetchOrdersUseCaseResponse> {
     const offset = (page - 1) * perPage
 
@@ -54,8 +56,9 @@ export class FetchOrdersUseCase {
       this.ordersRepository.findMany({
         limit: perPage,
         offset,
+        search,
       }),
-      this.ordersRepository.count(),
+      this.ordersRepository.count({ search }),
     ])
 
     const ordersWithDetails = await Promise.all(
