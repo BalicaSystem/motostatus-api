@@ -33,6 +33,7 @@ describe('Login (e2e)', () => {
     expect(response.body.user).toEqual(
       expect.objectContaining({
         id: user?.id,
+        name: 'Admin',
         email: 'admin@motostatus.com.br',
       }),
     )

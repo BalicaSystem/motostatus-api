@@ -26,6 +26,7 @@ describe('Authenticate Use Case', () => {
     })
 
     expect(response.userId).toEqual(expect.any(String))
+    expect(response.name).toEqual('Admin')
   })
 
   it('should not be able to authenticate with an unknown email', async () => {

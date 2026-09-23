@@ -10,6 +10,7 @@ interface AuthenticateUseCaseRequest {
 
 interface AuthenticateUseCaseResponse {
   userId: User['id']
+  name: User['name']
 }
 
 export class AuthenticateUseCase {
@@ -33,6 +34,7 @@ export class AuthenticateUseCase {
 
     return {
       userId: user.id,
+      name: user.name,
     }
   }
 }
