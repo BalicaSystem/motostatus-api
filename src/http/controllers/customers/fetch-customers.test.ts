@@ -1,10 +1,12 @@
-import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, orderItems, orders } from '../../../db/schema'
+import { customers, orderItems, orders, users } from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 
 describe('Fetch Customers (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeAll(async () => {
     await app.ready()
   })
@@ -17,6 +19,9 @@ describe('Fetch Customers (e2e)', () => {
     await db.delete(orderItems)
     await db.delete(orders)
     await db.delete(customers)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to fetch customers', async () => {
@@ -33,7 +38,7 @@ describe('Fetch Customers (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get('/api/customers')
+    const response = await authenticated.get('/api/customers')
 
     expect(response.statusCode).toBe(200)
     expect(response.body.customers).toHaveLength(2)
@@ -62,9 +67,7 @@ describe('Fetch Customers (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get(
-      '/api/customers?page=1&perPage=2',
-    )
+    const response = await authenticated.get('/api/customers?page=1&perPage=2')
 
     expect(response.statusCode).toBe(200)
     expect(response.body.customers).toHaveLength(2)
@@ -93,9 +96,7 @@ describe('Fetch Customers (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get(
-      '/api/customers?page=2&perPage=2',
-    )
+    const response = await authenticated.get('/api/customers?page=2&perPage=2')
 
     expect(response.statusCode).toBe(200)
     expect(response.body.customers).toHaveLength(1)
@@ -105,13 +106,13 @@ describe('Fetch Customers (e2e)', () => {
   })
 
   it('should not be able to fetch customers with an invalid page', async () => {
-    const response = await request(app.server).get('/api/customers?page=0')
+    const response = await authenticated.get('/api/customers?page=0')
 
     expect(response.statusCode).toBe(400)
   })
 
   it('should not be able to fetch customers with an invalid perPage', async () => {
-    const response = await request(app.server).get('/api/customers?perPage=0')
+    const response = await authenticated.get('/api/customers?perPage=0')
 
     expect(response.statusCode).toBe(400)
   })
@@ -130,7 +131,7 @@ describe('Fetch Customers (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get('/api/customers?q=silva')
+    const response = await authenticated.get('/api/customers?q=silva')
 
     expect(response.statusCode).toBe(200)
     expect(response.body.customers).toHaveLength(1)
@@ -155,7 +156,7 @@ describe('Fetch Customers (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get('/api/customers?q=987654321')
+    const response = await authenticated.get('/api/customers?q=987654321')
 
     expect(response.statusCode).toBe(200)
     expect(response.body.customers).toHaveLength(1)
@@ -174,7 +175,7 @@ describe('Fetch Customers (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get('/api/customers?q=Aquiraz')
+    const response = await authenticated.get('/api/customers?q=Aquiraz')
 
     expect(response.statusCode).toBe(200)
     expect(response.body.customers).toHaveLength(0)

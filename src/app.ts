@@ -1,12 +1,15 @@
 import fastify from 'fastify'
 import { ZodError } from 'zod'
 import cors from '@fastify/cors'
+import jwt from '@fastify/jwt'
 
 import { env } from './env'
 import { apiRoutes } from './http/controllers/index.routes'
 import { health } from './http/controllers/health'
 import { ChassisAlreadyExistsError } from './use-cases/errors/chassis-already-exists-error'
 import { ResourceNotFoundError } from './use-cases/errors/resource-not-found-error'
+import { UnauthorizedError } from './use-cases/errors/unauthorized-error'
+import { InvalidCredentialsError } from './use-cases/errors/invalid-credentials-error'
 import { CustomerAlreadyExistsError } from './use-cases/errors/customer-already-exists-error'
 import { MotorcycleUnavailableError } from './use-cases/errors/motorcycle-unavailable-error'
 import { MotorcycleCannotBeCheckedInError } from './use-cases/errors/motorcycle-cannot-be-checked-in-error'
@@ -19,6 +22,10 @@ export const app = fastify()
 await app.register(cors, {
   origin: ['http://localhost:3000', 'https://www.motostatus.com.br'],
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+})
+
+await app.register(jwt, {
+  secret: env.JWT_SECRET,
 })
 
 app.get('/health', health)
@@ -37,6 +44,18 @@ app.setErrorHandler((error, _, reply) => {
 
   if (error instanceof ResourceNotFoundError) {
     return reply.status(404).send({
+      message: error.message,
+    })
+  }
+
+  if (error instanceof UnauthorizedError) {
+    return reply.status(401).send({
+      message: error.message,
+    })
+  }
+
+  if (error instanceof InvalidCredentialsError) {
+    return reply.status(401).send({
       message: error.message,
     })
   }

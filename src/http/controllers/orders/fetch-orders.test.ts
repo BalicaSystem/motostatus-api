@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import request from 'supertest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
+import {
+  customers,
+  motorcycles,
+  orderItems,
+  orders,
+  users,
+} from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 import { createCustomer } from '../../../utils/test/create-customer'
 
 describe('Fetch Orders (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeEach(async () => {
     await app.ready()
 
@@ -13,6 +21,9 @@ describe('Fetch Orders (e2e)', () => {
     await db.delete(orders)
     await db.delete(customers)
     await db.delete(motorcycles)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to fetch orders', async () => {
@@ -23,7 +34,7 @@ describe('Fetch Orders (e2e)', () => {
       seller: 'Carlos',
     })
 
-    const response = await request(app.server).get('/api/orders').expect(200)
+    const response = await authenticated.get('/api/orders').expect(200)
 
     expect(response.body.orders).toHaveLength(1)
     expect(response.body.orders[0]).toEqual(
@@ -57,7 +68,7 @@ describe('Fetch Orders (e2e)', () => {
       })
     }
 
-    const response = await request(app.server)
+    const response = await authenticated
       .get('/api/orders?page=1&perPage=10')
       .expect(200)
 
@@ -81,7 +92,7 @@ describe('Fetch Orders (e2e)', () => {
       })
     }
 
-    const response = await request(app.server)
+    const response = await authenticated
       .get('/api/orders?page=2&perPage=10')
       .expect(200)
 
@@ -105,7 +116,7 @@ describe('Fetch Orders (e2e)', () => {
       })
     }
 
-    const response = await request(app.server)
+    const response = await authenticated
       .get('/api/orders?page=2&perPage=10')
       .expect(200)
 
@@ -129,7 +140,7 @@ describe('Fetch Orders (e2e)', () => {
       })
     }
 
-    const response = await request(app.server).get('/api/orders').expect(200)
+    const response = await authenticated.get('/api/orders').expect(200)
 
     expect(response.body.orders).toHaveLength(10)
 
@@ -142,7 +153,7 @@ describe('Fetch Orders (e2e)', () => {
   })
 
   it('should return an empty list when there are no orders', async () => {
-    const response = await request(app.server).get('/api/orders').expect(200)
+    const response = await authenticated.get('/api/orders').expect(200)
 
     expect(response.body.orders).toEqual([])
 
@@ -155,15 +166,13 @@ describe('Fetch Orders (e2e)', () => {
   })
 
   it('should not be able to fetch orders with an invalid page', async () => {
-    const response = await request(app.server)
-      .get('/api/orders?page=0')
-      .expect(400)
+    const response = await authenticated.get('/api/orders?page=0').expect(400)
 
     expect(response.body.message).toEqual('Validation error.')
   })
 
   it('should not be able to fetch orders with an invalid perPage', async () => {
-    const response = await request(app.server)
+    const response = await authenticated
       .get('/api/orders?perPage=101')
       .expect(400)
 
@@ -200,9 +209,7 @@ describe('Fetch Orders (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server)
-      .get('/api/orders?q=souza')
-      .expect(200)
+    const response = await authenticated.get('/api/orders?q=souza').expect(200)
 
     expect(response.body.orders).toHaveLength(1)
     expect(response.body.orders[0].customer.name).toBe('Maria Souza')
@@ -230,9 +237,7 @@ describe('Fetch Orders (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server)
-      .get('/api/orders?q=ana')
-      .expect(200)
+    const response = await authenticated.get('/api/orders?q=ana').expect(200)
 
     expect(response.body.orders).toHaveLength(1)
     expect(response.body.orders[0].seller).toBe('Ana Lima')

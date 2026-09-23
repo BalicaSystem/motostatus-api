@@ -1,12 +1,20 @@
 import { randomUUID } from 'node:crypto'
-import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
+import {
+  customers,
+  motorcycles,
+  orderItems,
+  orders,
+  users,
+} from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 import { createCustomer } from '../../../utils/test/create-customer'
 
 describe('Fetch Customer By Id (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeAll(async () => {
     await app.ready()
   })
@@ -20,14 +28,15 @@ describe('Fetch Customer By Id (e2e)', () => {
     await db.delete(orders)
     await db.delete(customers)
     await db.delete(motorcycles)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to fetch a customer by id', async () => {
     const { customer } = await createCustomer()
 
-    const response = await request(app.server).get(
-      `/api/customers/${customer.id}`,
-    )
+    const response = await authenticated.get(`/api/customers/${customer.id}`)
 
     expect(response.statusCode).toBe(200)
     expect(response.body.customer).toEqual(
@@ -41,15 +50,13 @@ describe('Fetch Customer By Id (e2e)', () => {
   })
 
   it('should not be able to fetch a non-existing customer', async () => {
-    const response = await request(app.server).get(
-      `/api/customers/${randomUUID()}`,
-    )
+    const response = await authenticated.get(`/api/customers/${randomUUID()}`)
 
     expect(response.statusCode).toBe(404)
   })
 
   it('should not be able to fetch a customer with an invalid id', async () => {
-    const response = await request(app.server).get('/api/customers/invalid-id')
+    const response = await authenticated.get('/api/customers/invalid-id')
 
     expect(response.statusCode).toBe(400)
   })

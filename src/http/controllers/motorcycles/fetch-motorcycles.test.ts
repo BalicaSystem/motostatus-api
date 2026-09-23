@@ -1,10 +1,18 @@
-import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
+import {
+  customers,
+  motorcycles,
+  orderItems,
+  orders,
+  users,
+} from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 
 describe('Fetch Motorcycles (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeAll(async () => {
     await app.ready()
   })
@@ -18,6 +26,9 @@ describe('Fetch Motorcycles (e2e)', () => {
     await db.delete(orders)
     await db.delete(customers)
     await db.delete(motorcycles)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to fetch motorcycles', async () => {
@@ -36,7 +47,7 @@ describe('Fetch Motorcycles (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get('/api/motorcycles')
+    const response = await authenticated.get('/api/motorcycles')
 
     expect(response.statusCode).toBe(200)
     expect(response.body.motorcycles).toHaveLength(2)
@@ -62,7 +73,7 @@ describe('Fetch Motorcycles (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get('/api/motorcycles?q=xre')
+    const response = await authenticated.get('/api/motorcycles?q=xre')
 
     expect(response.statusCode).toBe(200)
     expect(response.body.motorcycles).toHaveLength(1)
@@ -88,7 +99,7 @@ describe('Fetch Motorcycles (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get('/api/motorcycles?q=ZZZZZZ')
+    const response = await authenticated.get('/api/motorcycles?q=ZZZZZZ')
 
     expect(response.statusCode).toBe(200)
     expect(response.body.motorcycles).toHaveLength(1)
@@ -120,9 +131,7 @@ describe('Fetch Motorcycles (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get(
-      '/api/motorcycles?status=arrived',
-    )
+    const response = await authenticated.get('/api/motorcycles?status=arrived')
 
     expect(response.statusCode).toBe(200)
     expect(response.body.motorcycles).toHaveLength(1)
@@ -148,7 +157,7 @@ describe('Fetch Motorcycles (e2e)', () => {
       },
     ])
 
-    const response = await request(app.server).get(
+    const response = await authenticated.get(
       '/api/motorcycles?q=fan&status=in_transit',
     )
 
@@ -161,9 +170,7 @@ describe('Fetch Motorcycles (e2e)', () => {
   })
 
   it('should not be able to fetch motorcycles with an invalid status', async () => {
-    const response = await request(app.server).get(
-      '/api/motorcycles?status=invalid',
-    )
+    const response = await authenticated.get('/api/motorcycles?status=invalid')
 
     expect(response.statusCode).toBe(400)
   })

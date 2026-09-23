@@ -1,10 +1,12 @@
-import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, orderItems, orders } from '../../../db/schema'
+import { customers, orderItems, orders, users } from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 
 describe('Create Customer (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeAll(async () => {
     await app.ready()
   })
@@ -17,10 +19,13 @@ describe('Create Customer (e2e)', () => {
     await db.delete(orderItems)
     await db.delete(orders)
     await db.delete(customers)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to create a customer', async () => {
-    const response = await request(app.server).post('/api/customers').send({
+    const response = await authenticated.post('/api/customers').send({
       name: 'João Silva',
       document: '12345678900',
       city: 'Sobral',
@@ -37,13 +42,13 @@ describe('Create Customer (e2e)', () => {
   })
 
   it('should not be able to create a customer with an existing document', async () => {
-    await request(app.server).post('/api/customers').send({
+    await authenticated.post('/api/customers').send({
       name: 'João Silva',
       document: '12345678900',
       city: 'Sobral',
     })
 
-    const response = await request(app.server).post('/api/customers').send({
+    const response = await authenticated.post('/api/customers').send({
       name: 'Maria Silva',
       document: '12345678900',
       city: 'Fortaleza',
@@ -53,7 +58,7 @@ describe('Create Customer (e2e)', () => {
   })
 
   it('should not be able to create a customer without a name', async () => {
-    const response = await request(app.server).post('/api/customers').send({
+    const response = await authenticated.post('/api/customers').send({
       document: '12345678900',
       city: 'Sobral',
     })
@@ -62,7 +67,7 @@ describe('Create Customer (e2e)', () => {
   })
 
   it('should not be able to create a customer without a document', async () => {
-    const response = await request(app.server).post('/api/customers').send({
+    const response = await authenticated.post('/api/customers').send({
       name: 'João Silva',
       city: 'Sobral',
     })
@@ -71,7 +76,7 @@ describe('Create Customer (e2e)', () => {
   })
 
   it('should not be able to create a customer without a city', async () => {
-    const response = await request(app.server).post('/api/customers').send({
+    const response = await authenticated.post('/api/customers').send({
       name: 'João Silva',
       document: '12345678900',
     })
@@ -80,7 +85,7 @@ describe('Create Customer (e2e)', () => {
   })
 
   it('should not be able to create a customer with an empty name', async () => {
-    const response = await request(app.server).post('/api/customers').send({
+    const response = await authenticated.post('/api/customers').send({
       name: '',
       document: '12345678900',
       city: 'Sobral',
@@ -90,7 +95,7 @@ describe('Create Customer (e2e)', () => {
   })
 
   it('should not be able to create a customer with an empty document', async () => {
-    const response = await request(app.server).post('/api/customers').send({
+    const response = await authenticated.post('/api/customers').send({
       name: 'João Silva',
       document: '',
       city: 'Sobral',
@@ -100,7 +105,7 @@ describe('Create Customer (e2e)', () => {
   })
 
   it('should not be able to create a customer with an empty city', async () => {
-    const response = await request(app.server).post('/api/customers').send({
+    const response = await authenticated.post('/api/customers').send({
       name: 'João Silva',
       document: '12345678900',
       city: '',

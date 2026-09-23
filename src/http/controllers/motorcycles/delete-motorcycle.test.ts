@@ -1,14 +1,22 @@
 import { randomUUID } from 'node:crypto'
 import { eq } from 'drizzle-orm'
-import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
+import {
+  customers,
+  motorcycles,
+  orderItems,
+  orders,
+  users,
+} from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 import { createCustomer } from '../../../utils/test/create-customer'
 import { createMotorcycle } from '../../../utils/test/create-motorcycle'
 
 describe('Delete Motorcycle (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeAll(async () => {
     await app.ready()
   })
@@ -22,12 +30,15 @@ describe('Delete Motorcycle (e2e)', () => {
     await db.delete(orders)
     await db.delete(customers)
     await db.delete(motorcycles)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to delete a motorcycle', async () => {
     const { motorcycle } = await createMotorcycle()
 
-    const response = await request(app.server).delete(
+    const response = await authenticated.delete(
       `/api/motorcycles/${motorcycle?.id}`,
     )
 
@@ -42,7 +53,7 @@ describe('Delete Motorcycle (e2e)', () => {
   })
 
   it('should not be able to delete a non-existing motorcycle', async () => {
-    const response = await request(app.server).delete(
+    const response = await authenticated.delete(
       `/api/motorcycles/${randomUUID()}`,
     )
 
@@ -50,9 +61,7 @@ describe('Delete Motorcycle (e2e)', () => {
   })
 
   it('should not be able to delete a motorcycle with an invalid id', async () => {
-    const response = await request(app.server).delete(
-      '/api/motorcycles/invalid-id',
-    )
+    const response = await authenticated.delete('/api/motorcycles/invalid-id')
 
     expect(response.statusCode).toBe(400)
   })
@@ -74,7 +83,7 @@ describe('Delete Motorcycle (e2e)', () => {
       motorcycleId: motorcycle?.id,
     })
 
-    const response = await request(app.server).delete(
+    const response = await authenticated.delete(
       `/api/motorcycles/${motorcycle?.id}`,
     )
 

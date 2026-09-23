@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { hashSync } from 'bcryptjs'
 import { sql } from 'drizzle-orm'
 import { db } from './index'
 import {
@@ -6,6 +7,7 @@ import {
   motorcycles,
   orderItems,
   orders,
+  users,
   type NewCustomer,
   type NewMotorcycle,
   type NewOrder,
@@ -277,8 +279,14 @@ async function main() {
   console.log('[seed] Limpando dados existentes...')
 
   await db.execute(
-    sql`TRUNCATE TABLE order_items, orders, motorcycles, customers RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE TABLE users, order_items, orders, motorcycles, customers RESTART IDENTITY CASCADE`,
   )
+
+  await db.insert(users).values({
+    name: 'Administrador',
+    email: 'admin@motostatus.com.br',
+    passwordHash: hashSync('MotoStatus@2026!', 10),
+  })
 
   const customerValues = buildCustomers()
   const insertedCustomers = await db
@@ -365,6 +373,9 @@ async function main() {
   await db.insert(orderItems).values(orderItemValores)
 
   console.log('[seed] Seed concluído:')
+  console.log('[seed] Administrador:')
+  console.log('[seed]   E-mail: admin@motostatus.com.br')
+  console.log('[seed]   Senha: MotoStatus@2026!')
   console.log(`[seed] Clientes: ${insertedCustomers.length}`)
   console.log(`[seed] Motocicletas: ${insertedMotorcycles.length}`)
   console.log(`[seed] Pedidos: ${insertedOrders.length}`)

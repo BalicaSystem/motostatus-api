@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import request from 'supertest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
+import {
+  customers,
+  motorcycles,
+  orderItems,
+  orders,
+  users,
+} from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 import { createCustomer } from '../../../utils/test/create-customer'
 
 describe('Update Order (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeEach(async () => {
     await app.ready()
 
@@ -13,6 +21,9 @@ describe('Update Order (e2e)', () => {
     await db.delete(orders)
     await db.delete(customers)
     await db.delete(motorcycles)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to update an order', async () => {
@@ -27,7 +38,7 @@ describe('Update Order (e2e)', () => {
       })
       .returning()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .put(`/api/orders/${order?.id}`)
       .send({
         seller: 'João',
@@ -57,7 +68,7 @@ describe('Update Order (e2e)', () => {
       })
       .returning()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .put(`/api/orders/${order.id}`)
       .send({
         seller: 'João',
@@ -86,7 +97,7 @@ describe('Update Order (e2e)', () => {
       })
       .returning()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .put(`/api/orders/${order?.id}`)
       .send({
         billingDate: '2026-09-20',
@@ -115,7 +126,7 @@ describe('Update Order (e2e)', () => {
       })
       .returning()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .put(`/api/orders/${order?.id}`)
       .send({
         billingDate: null,
@@ -133,7 +144,7 @@ describe('Update Order (e2e)', () => {
   })
 
   it('should not be able to update a non-existing order', async () => {
-    const response = await request(app.server)
+    const response = await authenticated
       .put('/api/orders/00000000-0000-0000-0000-000000000000')
       .send({
         seller: 'João',
@@ -146,7 +157,7 @@ describe('Update Order (e2e)', () => {
   })
 
   it('should not be able to update an order with an invalid id', async () => {
-    const response = await request(app.server)
+    const response = await authenticated
       .put('/api/orders/invalid-id')
       .send({
         seller: 'João',
@@ -167,7 +178,7 @@ describe('Update Order (e2e)', () => {
       })
       .returning()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .put(`/api/orders/${order?.id}`)
       .send({
         seller: '',

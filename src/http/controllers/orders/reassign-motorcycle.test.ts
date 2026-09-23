@@ -2,10 +2,20 @@ import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
+import {
+  customers,
+  motorcycles,
+  orderItems,
+  orders,
+  users,
+} from '../../../db/schema'
 import { eq } from 'drizzle-orm'
+import type { InjectOptions } from 'light-my-request'
+import { createUser } from '../../../utils/test/create-user'
 
 describe('Reassign motorcycle', () => {
+  let authorization: string
+
   beforeAll(async () => {
     await app.ready()
   })
@@ -19,7 +29,18 @@ describe('Reassign motorcycle', () => {
     await db.delete(orders)
     await db.delete(customers)
     await db.delete(motorcycles)
+    await db.delete(users)
+
+    const { user } = await createUser()
+    authorization = `Bearer ${app.jwt.sign({ sub: user?.id }, { expiresIn: '1h' })}`
   })
+
+  function inject(options: InjectOptions) {
+    return app.inject({
+      ...options,
+      headers: { authorization, ...options.headers },
+    })
+  }
 
   it('should allow a released motorcycle to be reassigned to another customer', async () => {
     const [customerA] = await db
@@ -52,7 +73,7 @@ describe('Reassign motorcycle', () => {
       })
       .returning()
 
-    const firstOrderResponse = await app.inject({
+    const firstOrderResponse = await inject({
       method: 'POST',
       url: '/api/orders',
       payload: {
@@ -68,7 +89,7 @@ describe('Reassign motorcycle', () => {
 
     const firstOrderItem = firstOrderBody.orderItems[0]
 
-    const releaseResponse = await app.inject({
+    const releaseResponse = await inject({
       method: 'POST',
       url: `/api/orders/items/${firstOrderItem.id}/release`,
     })
@@ -76,7 +97,7 @@ describe('Reassign motorcycle', () => {
     expect(releaseResponse.statusCode).toEqual(200)
     expect(releaseResponse.json().orderItem.status).toEqual('released')
 
-    const secondOrderResponse = await app.inject({
+    const secondOrderResponse = await inject({
       method: 'POST',
       url: '/api/orders',
       payload: {
