@@ -1,11 +1,24 @@
-import { count, desc, eq } from 'drizzle-orm'
+import { count, desc, eq, ilike, or } from 'drizzle-orm'
 import { db } from '../../db'
-import { orders, type NewOrder, type Order } from '../../db/schema'
+import { customers, orders, type NewOrder, type Order } from '../../db/schema'
 import type {
   FindManyOrdersParams,
+  OrderSearchParams,
   OrdersRepository,
   UpdateOrderData,
 } from '../orders-repository'
+
+function orderSearchWhere(search?: string) {
+  if (!search) {
+    return undefined
+  }
+
+  return or(
+    ilike(orders.seller, `%${search}%`),
+    ilike(customers.name, `%${search}%`),
+    ilike(customers.document, `%${search}%`),
+  )
+}
 
 export class DrizzleOrdersRepository implements OrdersRepository {
   async create(data: NewOrder): Promise<Order | null> {
@@ -20,17 +33,34 @@ export class DrizzleOrdersRepository implements OrdersRepository {
     return order ?? null
   }
 
-  async findMany({ limit, offset }: FindManyOrdersParams): Promise<Order[]> {
+  async findMany({
+    limit,
+    offset,
+    search,
+  }: FindManyOrdersParams): Promise<Order[]> {
     return db
-      .select()
+      .select({
+        id: orders.id,
+        customerId: orders.customerId,
+        seller: orders.seller,
+        billingDate: orders.billingDate,
+        createdAt: orders.createdAt,
+        updatedAt: orders.updatedAt,
+      })
       .from(orders)
+      .innerJoin(customers, eq(orders.customerId, customers.id))
+      .where(orderSearchWhere(search))
       .orderBy(desc(orders.createdAt))
       .limit(limit)
       .offset(offset)
   }
 
-  async count(): Promise<number> {
-    const [result] = await db.select({ count: count() }).from(orders)
+  async count({ search }: OrderSearchParams = {}): Promise<number> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(orders)
+      .innerJoin(customers, eq(orders.customerId, customers.id))
+      .where(orderSearchWhere(search))
 
     return result?.count ?? 0
   }

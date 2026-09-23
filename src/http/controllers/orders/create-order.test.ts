@@ -1,12 +1,20 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import request from 'supertest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
+import {
+  customers,
+  motorcycles,
+  orderItems,
+  orders,
+  users,
+} from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 import { createCustomer } from '../../../utils/test/create-customer'
 import { createMotorcycle } from '../../../utils/test/create-motorcycle'
 
 describe('Create Order (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeEach(async () => {
     await app.ready()
 
@@ -14,20 +22,21 @@ describe('Create Order (e2e)', () => {
     await db.delete(orders)
     await db.delete(customers)
     await db.delete(motorcycles)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to create an order', async () => {
     const { customer } = await createCustomer()
     const { motorcycle } = await createMotorcycle()
 
-    const response = await request(app.server)
-      .post('/api/orders')
-      .send({
-        customerId: customer?.id,
-        seller: 'Carlos',
-        billingDate: '2026-09-17',
-        motorcycleIds: [motorcycle?.id],
-      })
+    const response = await authenticated.post('/api/orders').send({
+      customerId: customer?.id,
+      seller: 'Carlos',
+      billingDate: '2026-09-17',
+      motorcycleIds: [motorcycle?.id],
+    })
 
     expect(response.statusCode).toEqual(201)
     expect(response.body).toEqual({
@@ -58,13 +67,11 @@ describe('Create Order (e2e)', () => {
       chassis: 'TEST-002',
     })
 
-    const response = await request(app.server)
-      .post('/api/orders')
-      .send({
-        customerId: customer?.id,
-        seller: 'Carlos',
-        motorcycleIds: [motorcycle1?.id, motorcycle2?.id],
-      })
+    const response = await authenticated.post('/api/orders').send({
+      customerId: customer?.id,
+      seller: 'Carlos',
+      motorcycleIds: [motorcycle1?.id, motorcycle2?.id],
+    })
 
     expect(response.statusCode).toEqual(201)
     expect(response.body.orderItems).toHaveLength(2)
@@ -84,13 +91,11 @@ describe('Create Order (e2e)', () => {
   it('should not be able to create an order with a non-existing customer', async () => {
     const { motorcycle } = await createMotorcycle()
 
-    const response = await request(app.server)
-      .post('/api/orders')
-      .send({
-        customerId: '00000000-0000-0000-0000-000000000000',
-        seller: 'Carlos',
-        motorcycleIds: [motorcycle?.id],
-      })
+    const response = await authenticated.post('/api/orders').send({
+      customerId: '00000000-0000-0000-0000-000000000000',
+      seller: 'Carlos',
+      motorcycleIds: [motorcycle?.id],
+    })
 
     expect(response.statusCode).toEqual(404)
   })
@@ -98,13 +103,11 @@ describe('Create Order (e2e)', () => {
   it('should not be able to create an order with a non-existing motorcycle', async () => {
     const { customer } = await createCustomer()
 
-    const response = await request(app.server)
-      .post('/api/orders')
-      .send({
-        customerId: customer?.id,
-        seller: 'Carlos',
-        motorcycleIds: ['00000000-0000-0000-0000-000000000000'],
-      })
+    const response = await authenticated.post('/api/orders').send({
+      customerId: customer?.id,
+      seller: 'Carlos',
+      motorcycleIds: ['00000000-0000-0000-0000-000000000000'],
+    })
 
     expect(response.statusCode).toEqual(404)
   })
@@ -113,19 +116,17 @@ describe('Create Order (e2e)', () => {
     const { customer } = await createCustomer()
     const { motorcycle } = await createMotorcycle()
 
-    const response = await request(app.server)
-      .post('/api/orders')
-      .send({
-        customerId: customer?.id,
-        seller: 'Carlos',
-        motorcycleIds: [motorcycle?.id, motorcycle?.id],
-      })
+    const response = await authenticated.post('/api/orders').send({
+      customerId: customer?.id,
+      seller: 'Carlos',
+      motorcycleIds: [motorcycle?.id, motorcycle?.id],
+    })
 
     expect(response.statusCode).toEqual(409)
   })
 
   it('should not be able to create an order with invalid data', async () => {
-    const response = await request(app.server).post('/api/orders').send({
+    const response = await authenticated.post('/api/orders').send({
       customerId: 'invalid-id',
       seller: '',
       motorcycleIds: [],

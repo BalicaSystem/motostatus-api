@@ -1,9 +1,11 @@
-import request from 'supertest'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 import { createMotorcycle } from '../../../utils/test/create-motorcycle'
 
 describe('Fetch Motorcycle by ID (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeAll(async () => {
     await app.ready()
   })
@@ -12,10 +14,14 @@ describe('Fetch Motorcycle by ID (e2e)', () => {
     await app.close()
   })
 
+  beforeEach(async () => {
+    authenticated = await createAuthedAgent()
+  })
+
   it('should be able to fetch a motorcycle', async () => {
     const { motorcycle } = await createMotorcycle()
 
-    const response = await request(app.server).get(
+    const response = await authenticated.get(
       `/api/motorcycles/${motorcycle?.id}`,
     )
 

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { Customer, NewCustomer } from '../../db/schema'
 import type {
+  CustomerSearchParams,
   CustomersRepository,
   FindManyCustomersParams,
   UpdateCustomerData,
@@ -8,6 +9,19 @@ import type {
 
 export class InMemoryCustomersRepository implements CustomersRepository {
   public items: Customer[] = []
+
+  private matchesSearch(customer: Customer, search: string) {
+    const term = search.toLowerCase()
+    const digits = search.replace(/\D/g, '')
+
+    return (
+      customer.name.toLowerCase().includes(term) ||
+      customer.city.toLowerCase().includes(term) ||
+      customer.document.toLowerCase().includes(term) ||
+      (digits.length > 0 &&
+        customer.document.replace(/\D/g, '').includes(digits))
+    )
+  }
 
   async create(data: NewCustomer): Promise<Customer> {
     const customer: Customer = {
@@ -39,12 +53,21 @@ export class InMemoryCustomersRepository implements CustomersRepository {
   async findMany({
     limit,
     offset,
+    search,
   }: FindManyCustomersParams): Promise<Customer[]> {
-    return this.items.slice(offset, offset + limit)
+    const filtered = search
+      ? this.items.filter((item) => this.matchesSearch(item, search))
+      : this.items
+
+    return filtered.slice(offset, offset + limit)
   }
 
-  async count(): Promise<number> {
-    return this.items.length
+  async count({ search }: CustomerSearchParams = {}): Promise<number> {
+    if (!search) {
+      return this.items.length
+    }
+
+    return this.items.filter((item) => this.matchesSearch(item, search)).length
   }
 
   async update(id: string, data: UpdateCustomerData): Promise<Customer> {

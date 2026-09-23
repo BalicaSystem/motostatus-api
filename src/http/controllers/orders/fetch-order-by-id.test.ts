@@ -1,12 +1,20 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import request from 'supertest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
+import {
+  customers,
+  motorcycles,
+  orderItems,
+  orders,
+  users,
+} from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 import { createCustomer } from '../../../utils/test/create-customer'
 import { createMotorcycle } from '../../../utils/test/create-motorcycle'
 
 describe('Fetch Order By ID (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeEach(async () => {
     await app.ready()
 
@@ -14,6 +22,9 @@ describe('Fetch Order By ID (e2e)', () => {
     await db.delete(orders)
     await db.delete(customers)
     await db.delete(motorcycles)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to fetch an order by id', async () => {
@@ -37,7 +48,7 @@ describe('Fetch Order By ID (e2e)', () => {
       })
       .returning()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .get(`/api/orders/${order?.id}`)
       .expect(200)
 
@@ -71,7 +82,7 @@ describe('Fetch Order By ID (e2e)', () => {
       })
       .returning()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .get(`/api/orders/${order?.id}`)
       .expect(200)
 
@@ -86,7 +97,7 @@ describe('Fetch Order By ID (e2e)', () => {
   })
 
   it('should not be able to fetch a non-existing order', async () => {
-    const response = await request(app.server)
+    const response = await authenticated
       .get('/api/orders/00000000-0000-0000-0000-000000000000')
       .expect(404)
 
@@ -96,7 +107,7 @@ describe('Fetch Order By ID (e2e)', () => {
   })
 
   it('should not be able to fetch an order with an invalid id', async () => {
-    const response = await request(app.server)
+    const response = await authenticated
       .get('/api/orders/invalid-id')
       .expect(400)
 

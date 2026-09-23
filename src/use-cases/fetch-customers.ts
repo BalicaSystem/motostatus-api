@@ -4,6 +4,7 @@ import type { CustomersRepository } from '../repositories/customers-repository'
 interface FetchCustomersUseCaseRequest {
   page?: number
   perPage?: number
+  search?: string
 }
 
 interface FetchCustomersUseCaseResponse {
@@ -20,6 +21,7 @@ export class FetchCustomersUseCase {
   async execute({
     page = 1,
     perPage = 20,
+    search,
   }: FetchCustomersUseCaseRequest): Promise<FetchCustomersUseCaseResponse> {
     const offset = (page - 1) * perPage
 
@@ -27,8 +29,9 @@ export class FetchCustomersUseCase {
       this.customersRepository.findMany({
         limit: perPage,
         offset,
+        search,
       }),
-      this.customersRepository.count(),
+      this.customersRepository.count({ search }),
     ])
 
     return {

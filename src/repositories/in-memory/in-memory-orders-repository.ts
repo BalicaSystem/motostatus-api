@@ -2,12 +2,17 @@ import { randomUUID } from 'node:crypto'
 import type { NewOrder, Order } from '../../db/schema'
 import type {
   FindManyOrdersParams,
+  OrderSearchParams,
   OrdersRepository,
   UpdateOrderData,
 } from '../orders-repository'
 
 export class InMemoryOrdersRepository implements OrdersRepository {
   public orders: Order[] = []
+
+  private matchesSearch(order: Order, search: string) {
+    return order.seller.toLowerCase().includes(search.toLowerCase())
+  }
 
   async create(data: NewOrder): Promise<Order> {
     const order: Order = {
@@ -30,12 +35,25 @@ export class InMemoryOrdersRepository implements OrdersRepository {
     return order ?? null
   }
 
-  async findMany({ limit, offset }: FindManyOrdersParams): Promise<Order[]> {
-    return this.orders.slice(offset, offset + limit)
+  async findMany({
+    limit,
+    offset,
+    search,
+  }: FindManyOrdersParams): Promise<Order[]> {
+    const filtered = search
+      ? this.orders.filter((order) => this.matchesSearch(order, search))
+      : this.orders
+
+    return filtered.slice(offset, offset + limit)
   }
 
-  async count(): Promise<number> {
-    return this.orders.length
+  async count({ search }: OrderSearchParams = {}): Promise<number> {
+    if (!search) {
+      return this.orders.length
+    }
+
+    return this.orders.filter((order) => this.matchesSearch(order, search))
+      .length
   }
 
   async update(id: string, data: UpdateOrderData): Promise<Order> {

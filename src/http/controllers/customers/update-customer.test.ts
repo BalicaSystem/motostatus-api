@@ -1,12 +1,20 @@
 import { randomUUID } from 'node:crypto'
-import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { customers, motorcycles, orderItems, orders } from '../../../db/schema'
+import {
+  customers,
+  motorcycles,
+  orderItems,
+  orders,
+  users,
+} from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 import { createCustomer } from '../../../utils/test/create-customer'
 
 describe('Update Customer (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   afterAll(async () => {
     await app.close()
   })
@@ -18,12 +26,15 @@ describe('Update Customer (e2e)', () => {
     await db.delete(orders)
     await db.delete(customers)
     await db.delete(motorcycles)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to update a customer', async () => {
     const { customer } = await createCustomer()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/customers/${customer?.id}`)
       .send({
         name: 'João da Silva',
@@ -45,7 +56,7 @@ describe('Update Customer (e2e)', () => {
   it('should be able to update only the name', async () => {
     const { customer } = await createCustomer()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/customers/${customer?.id}`)
       .send({
         name: 'João da Silva',
@@ -65,7 +76,7 @@ describe('Update Customer (e2e)', () => {
   it('should be able to update only the document', async () => {
     const { customer } = await createCustomer()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/customers/${customer?.id}`)
       .send({
         document: '98765432100',
@@ -80,7 +91,7 @@ describe('Update Customer (e2e)', () => {
   it('should be able to update only the city', async () => {
     const { customer } = await createCustomer()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/customers/${customer?.id}`)
       .send({
         city: 'Fortaleza',
@@ -95,7 +106,7 @@ describe('Update Customer (e2e)', () => {
   it('should be able to keep the same document', async () => {
     const { customer } = await createCustomer()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/customers/${customer?.id}`)
       .send({
         name: 'João da Silva',
@@ -108,7 +119,7 @@ describe('Update Customer (e2e)', () => {
   })
 
   it('should not be able to update a non-existing customer', async () => {
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/customers/${randomUUID()}`)
       .send({
         name: 'João da Silva',
@@ -126,7 +137,7 @@ describe('Update Customer (e2e)', () => {
       document: '98765432100',
     })
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/customers/${secondCustomer?.id}`)
       .send({
         document: firstCustomer?.document,
@@ -136,7 +147,7 @@ describe('Update Customer (e2e)', () => {
   })
 
   it('should not be able to update with an invalid id', async () => {
-    const response = await request(app.server)
+    const response = await authenticated
       .patch('/api/customers/invalid-id')
       .send({
         name: 'João da Silva',
@@ -148,7 +159,7 @@ describe('Update Customer (e2e)', () => {
   it('should not be able to update with an invalid name', async () => {
     const { customer } = await createCustomer()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/customers/${customer?.id}`)
       .send({
         name: '',
@@ -160,7 +171,7 @@ describe('Update Customer (e2e)', () => {
   it('should not be able to update with an invalid document', async () => {
     const { customer } = await createCustomer()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/customers/${customer?.id}`)
       .send({
         document: '',
@@ -172,7 +183,7 @@ describe('Update Customer (e2e)', () => {
   it('should not be able to update with an invalid city', async () => {
     const { customer } = await createCustomer()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/customers/${customer?.id}`)
       .send({
         city: '',

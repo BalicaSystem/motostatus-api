@@ -1,4 +1,4 @@
-import { and, count, desc, eq, lt } from 'drizzle-orm'
+import { and, count, desc, eq, ilike, lt, or } from 'drizzle-orm'
 import { db } from '../../db'
 import {
   motorcycles,
@@ -7,8 +7,21 @@ import {
 } from '../../db/schema'
 import type {
   FindManyMotorcyclesParams,
+  MotorcycleSearchParams,
   MotorcyclesRepository,
 } from '../motorcycles-repository'
+
+function motorcycleWhere({ search, status }: MotorcycleSearchParams) {
+  return and(
+    status ? eq(motorcycles.status, status) : undefined,
+    search
+      ? or(
+          ilike(motorcycles.model, `%${search}%`),
+          ilike(motorcycles.chassis, `%${search}%`),
+        )
+      : undefined,
+  )
+}
 
 export class DrizzleMotorcyclesRepository implements MotorcyclesRepository {
   async findById(id: string): Promise<Motorcycle | null> {
@@ -29,10 +42,11 @@ export class DrizzleMotorcyclesRepository implements MotorcyclesRepository {
     return motorcycle ?? null
   }
 
-  async findMany({ limit, offset }: FindManyMotorcyclesParams) {
+  async findMany({ limit, offset, search, status }: FindManyMotorcyclesParams) {
     return db
       .select()
       .from(motorcycles)
+      .where(motorcycleWhere({ search, status }))
       .orderBy(desc(motorcycles.createdAt))
       .limit(limit)
       .offset(offset)
@@ -50,8 +64,11 @@ export class DrizzleMotorcyclesRepository implements MotorcyclesRepository {
       )
   }
 
-  async count() {
-    const [result] = await db.select({ count: count() }).from(motorcycles)
+  async count({ search, status }: MotorcycleSearchParams = {}) {
+    const [result] = await db
+      .select({ count: count() })
+      .from(motorcycles)
+      .where(motorcycleWhere({ search, status }))
 
     return result?.count ?? 0
   }
@@ -78,5 +95,9 @@ export class DrizzleMotorcyclesRepository implements MotorcyclesRepository {
       .returning()
 
     return motorcycle!
+  }
+
+  async delete(id: string): Promise<void> {
+    await db.delete(motorcycles).where(eq(motorcycles.id, id))
   }
 }

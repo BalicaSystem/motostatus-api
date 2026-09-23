@@ -1,11 +1,13 @@
-import request from 'supertest'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { app } from '../../../app'
 import { db } from '../../../db'
-import { motorcycles, orderItems, orders } from '../../../db/schema'
+import { motorcycles, orderItems, orders, users } from '../../../db/schema'
+import { createAuthedAgent } from '../../../utils/test/authed-agent'
 import { createMotorcycle } from '../../../utils/test/create-motorcycle'
 
 describe('Update Motorcycle (e2e)', () => {
+  let authenticated: Awaited<ReturnType<typeof createAuthedAgent>>
+
   beforeAll(async () => {
     await app.ready()
   })
@@ -18,12 +20,15 @@ describe('Update Motorcycle (e2e)', () => {
     await db.delete(orderItems)
     await db.delete(orders)
     await db.delete(motorcycles)
+    await db.delete(users)
+
+    authenticated = await createAuthedAgent()
   })
 
   it('should be able to update a motorcycle', async () => {
     const { motorcycle } = await createMotorcycle()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/motorcycles/${motorcycle?.id}`)
       .send({
         model: 'CG 160 Titan',
@@ -47,7 +52,7 @@ describe('Update Motorcycle (e2e)', () => {
   it('should be able to update only the status', async () => {
     const { motorcycle } = await createMotorcycle()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/motorcycles/${motorcycle?.id}`)
       .send({
         status: 'arrived',
@@ -68,7 +73,7 @@ describe('Update Motorcycle (e2e)', () => {
   it('should be able to update only the model', async () => {
     const { motorcycle } = await createMotorcycle()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/motorcycles/${motorcycle?.id}`)
       .send({
         model: 'CG 160 Titan',
@@ -83,7 +88,7 @@ describe('Update Motorcycle (e2e)', () => {
   it('should be able to remove the estimated arrival', async () => {
     const { motorcycle } = await createMotorcycle()
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/motorcycles/${motorcycle?.id}`)
       .send({
         estimatedArrival: null,
@@ -94,7 +99,7 @@ describe('Update Motorcycle (e2e)', () => {
   })
 
   it('should not be able to update a non-existing motorcycle', async () => {
-    const response = await request(app.server)
+    const response = await authenticated
       .patch('/api/motorcycles/00000000-0000-0000-0000-000000000000')
       .send({
         model: 'CG 160 Titan',
@@ -112,7 +117,7 @@ describe('Update Motorcycle (e2e)', () => {
       chassis: 'TEST-456',
     })
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/motorcycles/${secondMotorcycle?.id}`)
       .send({
         chassis: firstMotorcycle?.chassis,
@@ -126,7 +131,7 @@ describe('Update Motorcycle (e2e)', () => {
       chassis: 'TEST-123',
     })
 
-    const response = await request(app.server)
+    const response = await authenticated
       .patch(`/api/motorcycles/${motorcycle?.id}`)
       .send({
         model: 'CG 160 Titan',

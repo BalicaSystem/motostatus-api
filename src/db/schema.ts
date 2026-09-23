@@ -26,6 +26,23 @@ export const orderItemStatusEnum = pgEnum('order_item_status', [
   'completed',
 ])
 
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at', {
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp('updated_at', {
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow(),
+})
+
 export const motorcycles = pgTable('motorcycles', {
   id: uuid('id').defaultRandom().primaryKey(),
   model: text('model').notNull(),
@@ -101,6 +118,9 @@ export const orderItems = pgTable('order_items', {
     .notNull()
     .defaultNow(),
 })
+
+export type User = InferSelectModel<typeof users>
+export type NewUser = InferInsertModel<typeof users>
 
 export type Motorcycle = InferSelectModel<typeof motorcycles>
 export type NewMotorcycle = InferInsertModel<typeof motorcycles>

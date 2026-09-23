@@ -1,9 +1,37 @@
 import { randomUUID } from 'node:crypto'
 import type { Motorcycle, NewMotorcycle } from '../../db/schema'
-import type { MotorcyclesRepository } from '../motorcycles-repository'
+import type {
+  FindManyMotorcyclesParams,
+  MotorcycleSearchParams,
+  MotorcyclesRepository,
+} from '../motorcycles-repository'
 
 export class InMemoryMotorcycleRepository implements MotorcyclesRepository {
   public items: Motorcycle[] = []
+
+  private matchesSearch(motorcycle: Motorcycle, search: string) {
+    const term = search.toLowerCase()
+
+    return (
+      motorcycle.model.toLowerCase().includes(term) ||
+      motorcycle.chassis.toLowerCase().includes(term)
+    )
+  }
+
+  private matchesFilters(
+    motorcycle: Motorcycle,
+    { search, status }: MotorcycleSearchParams,
+  ) {
+    if (status && motorcycle.status !== status) {
+      return false
+    }
+
+    if (search && !this.matchesSearch(motorcycle, search)) {
+      return false
+    }
+
+    return true
+  }
 
   async findById(id: string) {
     const motorcycle = this.items.find((item) => item.id === id)
@@ -25,8 +53,17 @@ export class InMemoryMotorcycleRepository implements MotorcyclesRepository {
     return motorcycle
   }
 
-  async findMany(): Promise<Motorcycle[]> {
-    return this.items
+  async findMany({
+    limit,
+    offset,
+    search,
+    status,
+  }: FindManyMotorcyclesParams): Promise<Motorcycle[]> {
+    const filtered = this.items.filter((item) =>
+      this.matchesFilters(item, { search, status }),
+    )
+
+    return filtered.slice(offset, offset + limit)
   }
 
   async findOverdueInTransit(upTo: string): Promise<Motorcycle[]> {
@@ -38,8 +75,13 @@ export class InMemoryMotorcycleRepository implements MotorcyclesRepository {
     )
   }
 
-  async count(): Promise<number> {
-    return this.items.length
+  async count({
+    search,
+    status,
+  }: MotorcycleSearchParams = {}): Promise<number> {
+    return this.items.filter((item) =>
+      this.matchesFilters(item, { search, status }),
+    ).length
   }
 
   async create(data: NewMotorcycle) {
@@ -76,5 +118,15 @@ export class InMemoryMotorcycleRepository implements MotorcyclesRepository {
     })
 
     return motorcycle
+  }
+
+  async delete(id: string): Promise<void> {
+    const motorcycleIndex = this.items.findIndex((item) => item.id === id)
+
+    if (motorcycleIndex === -1) {
+      throw new Error('Motorcycle not found')
+    }
+
+    this.items.splice(motorcycleIndex, 1)
   }
 }
